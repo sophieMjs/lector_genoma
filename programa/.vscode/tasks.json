@@ -1,0 +1,33 @@
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++.exe build all files",
+            "command": "C:/msys64/mingw64/bin/g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "main.cpp",
+                "ArchivoFasta.cxx",
+                "Comando.cxx",
+                "Genoma.cxx",
+                "Histograma.cxx",
+                "Secuencia.cxx",
+                "-o",
+                "${fileDirname}\\mi_proyecto.exe"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Task generated to build the entire project."
+        }
+    ],
+    "version": "2.0.0"
+}
