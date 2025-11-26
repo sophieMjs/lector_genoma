@@ -13,8 +13,10 @@ void Comando::MontarAyuda()
               << "6- guardar //nombre_para_guardar_archivo\n"
               << "7- codificar //nombre_para_guardar_archivo\n"
               << "8- decodificar //nombre_archivo_a_decodificar\n"
-              << "9- salir" << std::endl;
-    std::cout << "para recibir ayuda sobre algun comando en especifico escribe ayuda comandos " << std::endl;
+              << "9- ruta_mas_corta //descripcion_secuencia i j x y\n"
+              << "10- base_remota //descripcion_secuencia i j\n"
+              << "11- salir" << std::endl;
+    std::cout << "Para recibir ayuda sobre algun comando en especifico escribe: ayuda comandos" << std::endl;
 }
 
 void Comando::AyudasPorComando(std::string comandoAuxilio)
@@ -36,6 +38,10 @@ void Comando::AyudasPorComando(std::string comandoAuxilio)
         std::cout << "codifica el genoma cargado en un archivo .fabin, debe escribir el nombre del archivo para guardar (sin el .fabin)" << std::endl;
     else if (comando == "decodificar")
         std::cout << "decodifica un archivo .fabin y lo carga en memoria, debe escribir el nombre del archivo .fabin a decodificar (sin el .fabin)" << std::endl;
+    else if (comando == "ruta_mas_corta")
+        std::cout << "Calcula e imprime la ruta de costo mínimo (usando grafos) entre la base en la posición [i,j] y la base en [x,y] dentro de la secuencia indicada." << std::endl;
+    else if (comando == "base_remota")
+        std::cout << "Busca la ubicación de la misma base (letra idéntica) más lejana dentro de la matriz de la secuencia, partiendo de la posición [i,j]." << std::endl;
     else if (comando == "salir")
         std::cout << "Para salir del programa." << std::endl;
 }

@@ -94,6 +94,18 @@ int main()
             ss >> comando >> archivo;
             genoma.Decodificar(archivo);
         }
+        else if(entrada.find("ruta_mas_corta")==0){
+             std::stringstream ss(entrada);
+            std::string comando, archivo;
+            ss >> comando >> archivo;
+        }
+        else if(entrada.find("base_remota")==0){
+             std::stringstream ss(entrada);
+            std::string comando, archivo;
+            ss >> comando >> archivo;
+        }
+        
+        
 
         std::cout << "$ ";
         std::getline(std::cin, entrada);

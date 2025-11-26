@@ -7,9 +7,74 @@
 #include "Codificador.h"
 #include <map>
 #include <vector>
+#include <queue>
+#include <limits>
+#include <cmath>
+#include <list>
+
+struct Estado
+{
+    double costo;
+    int indice;
+    bool operator<(const Estado &otro) const
+    {
+        return costo > otro.costo;
+    }
+};
+
+struct ResultadoDijkstra
+{
+    std::vector<double> distancias;
+    std::vector<int> padres;
+};
+
+ResultadoDijkstra EjecutarDijkstra(const Secuencia& sec, int indiceOrigen) {
+    int totalVertices = sec.adj.size();
+    ResultadoDijkstra res;
+
+    double infinito = 1000000000.0;
+
+    res.distancias.clear();
+    res.padres.clear();
+
+    for (int k = 0; k < totalVertices; k++) {
+        res.distancias.push_back(infinito);
+        res.padres.push_back(-1);
+    }
+
+    std::priority_queue<Estado> cola;
+
+    res.distancias[indiceOrigen] = 0.0;
+    cola.push({0.0, indiceOrigen});
+
+    while (!cola.empty()) {
+        Estado actual = cola.top();
+        cola.pop();
+
+        if (actual.costo > res.distancias[actual.indice]) {
+            continue;
+        }
+
+        std::list<Arista>::const_iterator it;
+        for (it = sec.adj[actual.indice].begin(); it != sec.adj[actual.indice].end(); ++it) {
+            int vecino = it->vecino;
+            double pesoArista = it->peso;
+            
+            double nuevoCosto = res.distancias[actual.indice] + pesoArista;
+
+            if (nuevoCosto < res.distancias[vecino]) {
+                res.distancias[vecino] = nuevoCosto;
+                res.padres[vecino] = actual.indice;
+                cola.push({nuevoCosto, vecino});
+            }
+        }
+    }
+    return res;
+}
 
 Genoma::Genoma() {}
 Genoma::Genoma(std::list<Secuencia> secuencias) : secuencias(secuencias) {}
+
 void Genoma::AgregarSecuencia(const Secuencia &s)
 {
     secuencias.push_back(s);
@@ -50,7 +115,6 @@ void Genoma::BuscarSecuencia(std::string n)
 
 void Genoma::ExisteSub(std::string sb)
 {
-
     if (secuencias.empty())
     {
         std::cout << "No hay secuencias cargadas en memoria.\n";
@@ -86,13 +150,11 @@ void Genoma::ExisteSub(std::string sb)
             }
             else
             {
-
                 int next_i = 0;
                 if (c == sb[0])
                 {
                     next_i = 1;
                 }
-
                 i = next_i;
                 total = next_i;
             }
@@ -190,7 +252,6 @@ void Genoma::Enmascarar(std::string sb)
 
 void Genoma::sumarFrecuencia(char base, int &a, int &c, int &g, int &t, int &u, int &menos, int &r, int &y, int &m, int &k, int &ss, int &w, int &b, int &d, int &h, int &v, int &n)
 {
-
     if (base == 'A')
     {
         a++;
@@ -315,7 +376,7 @@ void Genoma::Codificar(const std::string &nombreArchivo)
     std::ofstream archivoSalida("data/" + nombreArchivo + ".fabin", std::ios::binary);
     if (!archivoSalida.is_open())
     {
-        std::cerr << "No se pueden guardar las secuencias cargadas en " << nombreArchivo <<".fabin"<< std::endl;
+        std::cerr << "No se pueden guardar las secuencias cargadas en " << nombreArchivo << ".fabin" << std::endl;
         return;
     }
 
@@ -352,7 +413,7 @@ void Genoma::Codificar(const std::string &nombreArchivo)
     }
 
     archivoSalida.close();
-    std::cout << "Secuencias codificadas y almacenadas en " << nombreArchivo <<".fabin"<< std::endl;
+    std::cout << "Secuencias codificadas y almacenadas en " << nombreArchivo << ".fabin" << std::endl;
 }
 
 void Genoma::Decodificar(const std::string &nombreArchivo)
@@ -360,7 +421,7 @@ void Genoma::Decodificar(const std::string &nombreArchivo)
     std::ifstream archivoEntrada("data/" + nombreArchivo + ".fabin", std::ios::binary);
     if (!archivoEntrada.is_open())
     {
-        std::cerr << "No se pueden cargar las secuencias desde " << nombreArchivo <<".fabin"<< std::endl;
+        std::cerr << "No se pueden cargar las secuencias desde " << nombreArchivo << ".fabin" << std::endl;
         return;
     }
 
@@ -386,8 +447,10 @@ void Genoma::Decodificar(const std::string &nombreArchivo)
     archivoEntrada.read(reinterpret_cast<char *>(&n_secuencias), sizeof(int));
 
     Codificador decodificador;
+
     for (int i = 0; i < n_secuencias; ++i)
     {
+
         short nombre_len;
         archivoEntrada.read(reinterpret_cast<char *>(&nombre_len), sizeof(short));
 
@@ -425,5 +488,134 @@ void Genoma::Decodificar(const std::string &nombreArchivo)
     }
 
     archivoEntrada.close();
-    std::cout << "Secuencias decodificadas desde " << nombreArchivo <<".fabin"<< " y cargadas en memoria." << std::endl;
+    std::cout << "Secuencias decodificadas desde " << nombreArchivo << ".fabin" << " y cargadas en memoria." << std::endl;
+}
+
+void Genoma::RutaMasCorta(std::string nombreSec, int i, int j, int x, int y) {
+    Secuencia* sec = nullptr;
+    std::list<Secuencia>::iterator it;
+    for (it = secuencias.begin(); it != secuencias.end(); ++it) {
+        if (it->nombreS == nombreSec) {
+            sec = &(*it);
+            break;
+        }
+    }
+
+    if (sec == nullptr) {
+        std::cout << "La secuencia " << nombreSec << " no existe." << std::endl;
+        return;
+    }
+
+    int indiceOrigen = sec->GetIndiceVertice(i, j);
+    char baseOrigen = sec->GetBaseAt(i, j);
+    
+    if (baseOrigen == '\0') { 
+        std::cout << "La base en la posicion [" << i << "," << j << "] no existe." << std::endl;
+        return;
+    }
+
+    int indiceDestino = sec->GetIndiceVertice(x, y);
+    char baseDestino = sec->GetBaseAt(x, y);
+    if (baseDestino == '\0') {
+        std::cout << "La base en la posicion [" << x << "," << y << "] no existe." << std::endl;
+        return;
+    }
+
+    ResultadoDijkstra resultado = EjecutarDijkstra(*sec, indiceOrigen);
+
+    double costoTotal = resultado.distancias[indiceDestino];
+
+    if (costoTotal >= 1000000000.0) {
+         std::cout << "No existe una ruta entre esas bases." << std::endl;
+         return;
+    }
+
+    std::cout << "Para la secuencia " << nombreSec << ", la ruta mas corta entre" << std::endl;
+    std::cout << "la base " << baseOrigen << " en [" << i << "," << j << "] y la base " << baseDestino << " en [" << x << "," << y << "] es:" << std::endl;
+
+    std::list<int> ruta;
+    int paso = indiceDestino;
+    while (paso != -1) {
+        ruta.push_front(paso);
+        paso = resultado.padres[paso];
+    }
+    
+    std::list<int>::iterator itRuta;
+    for (itRuta = ruta.begin(); itRuta != ruta.end(); ++itRuta) {
+        int idx = *itRuta;
+        std::pair<int, int> coords = sec->GetCoordsVertice(idx);
+        char base = sec->GetBaseAt(coords.first, coords.second);
+        std::cout << "-> [" << coords.first << "," << coords.second << "] (" << base << ") " << std::endl;
+    }
+
+    std::cout << "El costo total de la ruta es: " << costoTotal << std::endl;
+}
+
+void Genoma::BaseRemota(std::string nombreSec, int i, int j) {
+    Secuencia* sec = nullptr;
+    std::list<Secuencia>::iterator it;
+    for (it = secuencias.begin(); it != secuencias.end(); ++it) {
+        if (it->nombreS == nombreSec) {
+            sec = &(*it);
+            break;
+        }
+    }
+
+    if (sec == nullptr) {
+        std::cout << "La secuencia " << nombreSec << " no existe." << std::endl;
+        return;
+    }
+
+    int indiceOrigen = sec->GetIndiceVertice(i, j);
+    char baseOrigen = sec->GetBaseAt(i, j);
+    if (baseOrigen == '\0') {
+        std::cout << "La base en la posicion [" << i << "," << j << "] no existe." << std::endl;
+        return;
+    }
+
+    ResultadoDijkstra resultado = EjecutarDijkstra(*sec, indiceOrigen);
+
+    double maxCosto = -1.0;
+    int indiceRemoto = -1;
+
+    for (int k = 0; k < sec->adj.size(); ++k) {
+        if (k == indiceOrigen) continue;
+
+        std::pair<int, int> coords = sec->GetCoordsVertice(k);
+        char baseActual = sec->GetBaseAt(coords.first, coords.second);
+
+        if (baseActual == baseOrigen) {
+            double costo = resultado.distancias[k];
+            if (costo < 1000000000.0 && costo > maxCosto) {
+                maxCosto = costo;
+                indiceRemoto = k;
+            }
+        }
+    }
+
+    if (indiceRemoto == -1) {
+        std::cout << "No se encontro otra base '" << baseOrigen << "' en la secuencia." << std::endl;
+        return;
+    }
+
+    std::pair<int, int> coordsRemotas = sec->GetCoordsVertice(indiceRemoto);
+    std::cout << "Para la secuencia " << nombreSec << ", la base remota esta ubicada" << std::endl;
+    std::cout << "en [" << coordsRemotas.first << "," << coordsRemotas.second << "], y la ruta entre la base en [" << i << "," << j << "] y la base remota en [" << coordsRemotas.first << "," << coordsRemotas.second << "] es:" << std::endl;
+
+    std::list<int> ruta;
+    int paso = indiceRemoto;
+    while (paso != -1) {
+        ruta.push_front(paso);
+        paso = resultado.padres[paso];
+    }
+    
+    std::list<int>::iterator itRuta;
+    for (itRuta = ruta.begin(); itRuta != ruta.end(); ++itRuta) {
+        int idx = *itRuta;
+        std::pair<int, int> coords = sec->GetCoordsVertice(idx);
+        char base = sec->GetBaseAt(coords.first, coords.second);
+        std::cout << "-> [" << coords.first << "," << coords.second << "] (" << base << ") " << std::endl;
+    }
+
+    std::cout << "El costo total de la ruta es: " << maxCosto << std::endl;
 }

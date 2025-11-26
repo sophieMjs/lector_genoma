@@ -23,6 +23,8 @@ public:
     void Frecuencia(Secuencia s);
     void Codificar(const std::string &nombreArchivo);
     void Decodificar(const std::string &nombreArchivo);
+    void RutaMasCorta(std::string nombreSec, int i, int j, int x, int y);
+    void BaseRemota(std::string nombreSec, int i, int j);
 };
 
 #endif
